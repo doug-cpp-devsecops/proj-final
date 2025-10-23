@@ -10,7 +10,7 @@ nodes:
 
   # Dependency Track Frontend
   - containerPort: 30801
-    hostPort: 8081
+    hostPort: 8085
 
   # Dependency Track API
   - containerPort: 30101
@@ -30,7 +30,7 @@ nodes:
 
   # Grafana
   - containerPort: 30805
-    hostPort: 3000
+    hostPort: 3001
 
   # Prometheus
   - containerPort: 30806
