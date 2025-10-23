@@ -83,3 +83,5 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+# ENV secrets
+.env.secrets
