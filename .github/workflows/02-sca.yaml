@@ -27,7 +27,7 @@ jobs:
         with:
           artifact-name: sbom-syft.json
           format: cyclonedx
-          upload-artifact: true
+          upload-artifact: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
           output-file: sbom-syft.json
           syft-version: v1.33.0
