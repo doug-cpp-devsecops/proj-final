@@ -1,0 +1,102 @@
+name: 03-sast
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sast-sonarqube:
+    name: SAST - SonarQube
+    runs-on: [arc-runner-set]
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Run SonarScanner
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: http://sonarqube-sonarqube.sonarqube:9000
+          SONAR_PROJECT_KEY: app
+        run: |
+          docker run \
+            --network host \
+            --platform linux/amd64 \
+            --rm \
+            -e SONAR_HOST_URL="${SONAR_HOST_URL}" \
+            -e SONAR_TOKEN="${SONAR_TOKEN}" \
+            -v "$(pwd):/usr/src" \
+            sonarsource/sonar-scanner-cli \
+              -Dsonar.projectKey=app \
+              -Dsonar.projectName="DevSecOps App" \
+              -Dsonar.sources=${SONAR_PROJECT_KEY}
+
+      - name: Check Quality Gate
+        id: quality-gate
+        continue-on-error: true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: http://sonarqube-sonarqube.sonarqube:9000
+          SONAR_PROJECT_KEY: app
+        run: |
+          sleep 10
+          STATUS=$(curl -s -u ${SONAR_TOKEN}: -G \
+            --data-urlencode "projectKey=${SONAR_PROJECT_KEY}" \
+            "${SONAR_HOST_URL}/api/qualitygates/project_status" \
+            | jq -r '.projectStatus.status')
+
+          if [ "${STATUS}" != "OK" ]; then
+            echo "❌ Quality Gate failed with status: ${STATUS}"
+            exit 1
+          else
+            echo "✅ Quality Gate passed"
+          fi
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install sonar-tools
+        run: pip install sonar-tools
+
+      - name: Export SonarQube findings to SARIF
+        env:
+          SONAR_USER_TOKEN: ${{ secrets.SONAR_USER_TOKEN }}
+          SONAR_HOST_URL: http://sonarqube-sonarqube.sonarqube:9000
+          SONAR_PROJECT_KEY: app
+        run: |
+          sonar-findings-export \
+            -u ${SONAR_HOST_URL} \
+            -t ${SONAR_USER_TOKEN} \
+            -k ${SONAR_PROJECT_KEY} \
+            --format sarif \
+            --sarifNoCustomProperties \
+            > sonarqube-results.sarif
+
+      - name: Fix SARIF file paths
+        run: |
+          jq '.runs[].results[].locations[].physicalLocation.artifactLocation.uri |= sub("^file:///"; "")' sonarqube-results.sarif > sonarqube-results-fixed.sarif
+          mv -f sonarqube-results-fixed.sarif sonarqube-results.sarif
+
+      - name: Upload SonarQube SARIF
+        if: always() && hashFiles('sonarqube-results.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: sonarqube-results.sarif
+
+      - name: Fail if Quality Gate failed
+        if: steps.quality-gate.outcome == 'failure'
+        run: exit 1
