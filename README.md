@@ -5,6 +5,21 @@ Aqui usamos essa aplicação para demonstrar pipelines DevSecOps no **GitHub Act
 
 > ⚠️ **Aviso:** o aplicativo contém vulnerabilidades reais intencionais. Não execute em produção nem exponha em rede pública.
 
+
+## 📦 Entregáveis
+
+Para facilitar a avaliação da evolução do projeto, disponibilizamos evidências detalhadas do desenvolvimento e das práticas aplicadas:
+
+- **Documentos PDF**
+
+  1. [Jornada Final DevSecOps na prática](reports/Jornada%20Final%20DevSecOps%20na%20Prática.pdf)  
+  2. [Ferramentas utilizadas para scans de segurança - evidências](reports/Relatório%20de%20Ferramentas%20utilizadas.pdf)  
+
+- **Imagens / prints**  
+  - Pasta completa com dezenas de capturas de tela mostrando pipelines, scans e resultados: [`reports/screenshots`](reports/screenshots/)
+
+> 💡 Observação: esta seção reúne os principais resultados práticos do projeto, permitindo uma visão rápida das evidências de desenvolvimento antes de explorar os detalhes técnicos, estrutura do repositório e workflows.
+
 ---
 
 ## 🧭 Como executar
