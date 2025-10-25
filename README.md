@@ -90,35 +90,34 @@ Abaixo a listagem dos arquivos e pastas relevantes no repositório.   Os itens c
 
 ```text
 .
-├── allocations-dao.js   # lógica insegura para demonstração de falhas
+├── allocations-dao.js           # lógica insegura para demonstração de falhas
 ├── app.js
 ├── attacks/
 ├── bin/
 ├── config.js
 ├── Dockerfile
 ├── docker-compose.yml
-├── dummy.js             # utilitário de teste / fake data
+├── dummy.js                     # utilitário de teste / fake data
 ├── images/
-├── kind-config.yaml     # configuração do Kind para testes locais
-├── k8s/                 # manifests Kubernetes (ex.: deploy em porta 8084)
+├── kind-config.yaml             # configuração do Kind para testes locais
+├── k8s/                         # manifests Kubernetes (ex.: deploy em porta 8084)
 ├── LICENSE
 ├── model/
-├── my-tokens.env        # tokens falsos para testar secret scanning
-├── node_modules/        # dependências locais; idealmente ignoradas
+├── my-tokens.env                # tokens falsos para testar secret scanning
 ├── package.json
 ├── package-lock.json
-├── package.json.bak     # backup do package.json
+├── package.json.bak             # backup do package.json
 ├── public/
 ├── README.md
 ├── routes/
 ├── scanner/
 │    └── sast/
-├── scripts/             # helpers para rodar local e CI
+├── scripts/                     # helpers para rodar local e CI
 ├── services/
 │    └── postgresql/
-├── test-secrets.env     # secrets de teste para scanners
+├── test-secrets.env             # secrets de teste para scanners
 ├── views/
-└── .github/workflows/        # workflows do GitHub Actions
+└── .github/workflows/           # workflows do GitHub Actions
     ├── 01-secret-scanning.yml   # detecção de segredos (Trivy + Gitleaks)
     ├── 02-sca.yml               # SBOM e Dependency Scan
     └── 03-sast.yml              # SAST com SonarQube
@@ -131,7 +130,6 @@ Abaixo a listagem dos arquivos e pastas relevantes no repositório.   Os itens c
 - `k8s/` e `kind-config.yaml`: manifests para demo de deploy em Kubernetes.
 - `scripts/`: helpers para pipelines locais e testes.
 - `package.json.bak`: backup local.
-- `node_modules/`: gerado localmente; colocar em `.gitignore`.
 - `.github/workflows/`: contém todos os workflows de CI/CD e scans de segurança, detalhados abaixo:
     - `01-secret-scanning.yml`: detecta segredos no código usando Trivy e Gitleaks.
     - `02-sca.yml`: gera SBOM e roda scans de dependências (Dependency Track e Trivy).
