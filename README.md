@@ -353,7 +353,7 @@ Optamos por **não implementá-las aqui** para preservar a **fluidez e a reprodu
 
 ## 🧑‍💻 Autores
 
-- **Douglas Azevedo** — github.com/doug-cpp
-- **Gustavo Nicolau** — github.com/gustavonj
-- **José Alves** — github.com/josealves0611
-- **Pedro Williams** — github.com/Pedrowilliamss
+- **Douglas Azevedo** — [github.com/doug-cpp](https://github.com/doug-cpp)
+- **Gustavo Nicolau** — [github.com/gustavonj](https://github.com/gustavonj)
+- **José Alves** — [github.com/josealves0611](https://github.com/josealves0611)
+- **Pedro Williams** — [github.com/Pedrowilliamss](https://github.com/Pedrowilliamss)
