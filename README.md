@@ -1,17 +1,3 @@
-Vulnerable Node
-===============
-
-![Logo](https://raw.githubusercontent.com/cr0hn/vulnerable-node/master/images/logo-small.png)
-
-*Vulnerable Node: A very vulnerable web site written in NodeJS*
-
-Codename | PsEA
--------- | ----
-Version | 1.0
-Code | https://github.com/cr0hn/vulnerable-node
-Issues | https://github.com/cr0hn/vulnerable-node/issues/
-Author | Daniel Garcia (cr0hn) - @ggdaniel
-
 # 🧩 Projeto Final — DevSecOps com Vulnerable Node
 
 Este repositório é uma cópia estendida do projeto [cr0hn/vulnerable-node](https://github.com/cr0hn/vulnerable-node) — uma aplicação **Node.js intencionalmente vulnerável** para fins educacionais.  
@@ -55,7 +41,33 @@ http://127.0.0.1:3000
 - `roberto : asdfpiuw981`
 
 > **Obs.:** Não é necessário logar com as credenciais mostradas, pois existe uma vulnerabilidade relacionada e o navegador se recusa a entrar com erros de sessão.
+
+### 1️⃣ Arquitetura da aplicação (`vulnerable-node`)
+
+```mermaid
+flowchart LR
+    subgraph App [Vulnerable Node App]
+        A[app.js / routes] --> B[Controllers / Services]
+        B --> C[Model / Database Access]
+        B --> D[Views / Templates]
+    end
+
+    subgraph DB [Database]
+        E[(PostgreSQL)]
+    end
+
+    subgraph Static [Assets]
+        F[images/, public/]
+    end
+
+    B --> E
+    D --> F
+
+```
+
+
 ---
+
 
 ## 🧰 Estrutura do repositório
 
@@ -135,54 +147,31 @@ Neste repositório foram adicionados **3 workflows** que rodam em `push` e `pull
 
 ```mermaid
 flowchart TD
-  subgraph Repo["GitHub Repository (proj-final)"]
-    PushPR["Push / Pull Request"]
-  end
+  A[Push / Pull Request] --> B[GitHub Actions CI/CD]
 
-  subgraph CI["GitHub Actions CI/CD"]
+  subgraph WF["Workflows"]
     direction TB
-
-    subgraph WF1["01 - Secret Scanning"]
-      SS1["Checkout Code"]
-      SS2["Trivy (secrets)"]
-      SS3["Gitleaks"]
-      SS4["Upload SARIF"]
-      SS5["Generate Summary in Step"]
-    end
-
-    subgraph WF2["02 - SCA (Software Composition Analysis)"]
-      SCA1["SBOM Generation (Syft)"]
-      SCA2["Upload SBOM to Dependency-Track"]
-      SCA3["Dependency Graph (Trivy GitHub mode)"]
-      SCA4["Vulnerability Scan (Trivy SARIF / table)"]
-    end
-
-    subgraph WF3["03 - SAST (Static App Security Testing)"]
-      SAST1["Checkout Code"]
-      SAST2["SonarScanner (Docker)"]
-      SAST3["Check Quality Gate (Sonar)"]
-      SAST4["Export Findings (SARIF)"]
-      SAST5["Upload SARIF to GitHub"]
-    end
+    B1["01 - Secret Scanning"]
+    B2["02 - SCA"]
+    B3["03 - SAST"]
   end
 
-  subgraph Platform["Security Tools & Integrations"]
-    DTrack["Dependency-Track"]
-    SonarQ["SonarQube Server"]
-    GHAS["GitHub Code Scanning (SARIF)"]
+  subgraph Tools["Security Tools & Integrations"]
+    direction TB
+    T1["Dependency-Track"]
+    T2["SonarQube Server"]
+    T3["GitHub Code Scanning (SARIF)"]
   end
 
-  PushPR --> CI
-  SS4 --> GHAS
-  SCA2 --> DTrack
-  SCA4 --> GHAS
-  SAST5 --> GHAS
-  SAST2 --> SonarQ
-  SonarQ --> SAST3
+  B --> B1
+  B --> B2
+  B --> B3
 
-  style Repo fill:#E8F0FE,stroke:#90A4AE
-  style CI fill:#FFF7E6,stroke:#E6C07A
-  style Platform fill:#E8F5E9,stroke:#A5D6A7
+  B1 --> T3
+  B2 --> T1
+  B2 --> T3
+  B3 --> T2
+  B3 --> T3
 
 ```
 
@@ -231,6 +220,83 @@ sequenceDiagram
 ```
 
 > **Obs:** os passos de "fail" (ex.: falhar o job quando o Quality Gate não é OK, ou quando Trivy retorna exit code = 1) estão configurados nos workflows — assim o PR pode ser bloqueado até correção.
+
+### Workflow 01 – Secret Scanning
+
+```mermaid
+flowchart TD
+    A[PR ou Push na main] --> B[Checkout do código]
+    B --> C{Ferramenta de scan?}
+    C -->|Trivy| D[Executa Trivy JSON e SARIF]
+    D --> E[Upload SARIF para GitHub]
+    D --> F[Gerar resumo Trivy]
+    F --> G{Encontrou secrets?}
+    G -->|Sim| H[Fail workflow]
+    G -->|Não| I[Continua]
+    C -->|Gitleaks| J[Executa Gitleaks]
+    J --> K[Upload SARIF Gitleaks]
+```
+
+
+### Workflow 02 – SCA / SBOM e Dependency Scan
+
+
+```mermaid
+flowchart LR
+    A[PR ou Push na main] --> B[Checkout do código]
+    B --> C[Gerar SBOM com Syft]
+    C --> D[Upload SBOM para Dependency Track]
+    B --> E[Trivy scan para dependências]
+    E --> F[Enviar resultados para GitHub Dependency Graph]
+    B --> G["Trivy scan de vulnerabilidades (SARIF)"]
+    G --> H[Upload SARIF para GitHub]
+    B --> I["Trivy scan (fail check)"]
+
+```
+
+
+### Workflow 03 – SAST / SonarQube
+
+```mermaid
+flowchart TD
+    A[PR ou Push na main] --> B[Checkout do código]
+    B --> C[Run SonarScanner via Docker]
+    C --> D[Check Quality Gate]
+    D --> E{Quality Gate OK?}
+    E -->|Não| F[Fail workflow]
+    E -->|Sim| G[Setup Python + Instala sonar-tools]
+    G --> H[Exportar findings para SARIF]
+    H --> I[Fix paths SARIF]
+    I --> J[Upload SARIF para GitHub]
+```
+
+### Integração geral CI/CD + Scans + Deploy
+
+```mermaid
+flowchart LR
+    subgraph GitHub [GitHub Repository]
+        A[Code] --> B[Workflows CI/CD]
+    end
+
+    subgraph Scans [Security Scans]
+        B --> C01[Secret Scanning]
+        B --> C02[SCA / SBOM]
+        B --> C03[SAST]
+    end
+
+    subgraph Build [Build & Deploy]
+        B --> D[Build Docker Image]
+        D --> E[Push Docker Image to Registry]
+        E --> F["Deploy to Kubernetes (ex.: porta 8084)"]
+    end
+
+    subgraph Reports [Reporting]
+        C01 --> G[GitHub SARIF / Summary]
+        C02 --> G
+        C03 --> G
+    end
+
+```
 
 ## 📁 Relatórios e artefatos
 
@@ -287,7 +353,7 @@ Optamos por **não implementá-las aqui** para preservar a **fluidez e a reprodu
 
 ## 🧑‍💻 Autores
 
-**Douglas Azevedo** — 
-**Gustavo Nicolau** — 
-**José Alves** — 
-**Pedro Williams** — 
+- **Douglas Azevedo** — github.com/doug-cpp
+- **Gustavo Nicolau** — github.com/gustavonj
+- **José Alves** — github.com/josealves0611
+- **Pedro Williams** — github.com/Pedrowilliamss
